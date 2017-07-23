@@ -1,0 +1,5 @@
+[project]
+python = "3.4"
+
+[executable]
+entry = "hello.py"
