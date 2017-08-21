@@ -68,4 +68,4 @@ More important at the top.
 - [ ] PIP dependency identification, downloading (`requirements.txt`)
 - [ ] Figuring out how to use `Vaderfile`s
 - [ ] Packaging modular/monolithic ZIPs, debs, etc.
-- [ ] Transient dependencies (code generation, a la Swagger, etc.)
+- [ ] Dynamic dependencies (code generation a la Swagger, etc.)
