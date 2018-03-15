@@ -1,0 +1,2 @@
+main: hello.py
+pyver: '2'
