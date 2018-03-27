@@ -83,7 +83,7 @@ func download_package(pkg pippackage) {
 	}
 
 	ppath := path.Join(user.HomeDir, ".vader", "repo", pkg.Pipver, pkg.Name, pkg.Version)
-	err = os.MkdirAll(ppath, os.ModeDir | 0)
+	err = os.MkdirAll(ppath, os.ModeDir | 0755)
 	if err != nil {
 		panic(err)
 	}
