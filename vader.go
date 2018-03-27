@@ -2,12 +2,17 @@ package main
 
 import "os"
 import "os/exec"
+import "os/user"
 import "io/ioutil"
+import "path"
 import "path/filepath"
 
 import "strings"
 
 import "gopkg.in/yaml.v2"
+
+const pip2path = "/usr/bin/pip"
+const pip3path = "/usr/bin/pip3"
 
 type bindef struct {
 	Path string
@@ -64,6 +69,47 @@ func parse_vaderfile(path string) vaderfiledef {
 
 }
 
+type pippackage struct {
+	Pipver string
+	Name string
+	Version string
+}
+
+func download_package(pkg pippackage) {
+
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	ppath := path.Join(user.HomeDir, ".vader", "repo", pkg.Pipver, pkg.Name, pkg.Version)
+	err = os.MkdirAll(ppath, os.ModeDir | 0)
+	if err != nil {
+		panic(err)
+	}
+
+	// Figure out what we should pass to pip as the version string.
+	var dlstr = pkg.Name
+	if len(pkg.Version) > 0 {
+		dlstr = dlstr + "==" + pkg.Version
+	}
+
+	dlcmd := exec.Command(pkg.Pipver, "download", "--no-deps", dlstr)
+	dlcmd.Dir = ppath
+	dlcmd.Stdout = os.Stdout
+	dlcmd.Stderr = os.Stderr
+	dlcmd.Run()
+
+}
+
+func run_python(vf vaderfiledef, bin bindef) {
+	var prog = exec.Command(bin.Path, vf.Main);
+	prog.Stdin = os.Stdin
+	prog.Stdout = os.Stdout
+	prog.Stderr = os.Stderr
+	prog.Run()
+}
+
 func main() {
 
 	var vf = parse_vaderfile("./Vaderfile")
@@ -76,10 +122,6 @@ func main() {
 		}
 	}
 
-	var prog = exec.Command(bin.Path, vf.Main);
-	prog.Stdin = os.Stdin
-	prog.Stdout = os.Stdout
-	prog.Stderr = os.Stderr
-	prog.Run()
+	run_python(vf, bin)
 
 }
