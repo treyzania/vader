@@ -75,15 +75,17 @@ type pippackage struct {
 	Version string
 }
 
-func download_package(pkg pippackage) {
-
+func (pkg *pippackage) pkg_repo_path() string {
 	user, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
+	return path.Join(user.HomeDir, ".vader", "repo", pkg.Pipver, pkg.Name, pkg.Version)
+}
 
-	ppath := path.Join(user.HomeDir, ".vader", "repo", pkg.Pipver, pkg.Name, pkg.Version)
-	err = os.MkdirAll(ppath, os.ModeDir | 0755)
+func download_package(pkg pippackage) string {
+
+	tempdir, err := ioutil.TempDir("", "vaderdl")
 	if err != nil {
 		panic(err)
 	}
@@ -94,11 +96,37 @@ func download_package(pkg pippackage) {
 		dlstr = dlstr + "==" + pkg.Version
 	}
 
+	// Actually download it.
 	dlcmd := exec.Command(pkg.Pipver, "download", "--no-deps", dlstr)
-	dlcmd.Dir = ppath
+	dlcmd.Dir = tempdir
 	dlcmd.Stdout = os.Stdout
 	dlcmd.Stderr = os.Stderr
 	dlcmd.Run()
+
+	// Find the things we downloaded.
+	files, err := ioutil.ReadDir(tempdir)
+	if err != nil {
+		panic(err)
+	}
+
+	// And extract the files we need.
+	ppath := pkg.pkg_repo_path()
+	os.MkdirAll(ppath, 0755)
+	for _, f := range files {
+
+		if strings.HasSuffix(f.Name(), ".tar.gz") {
+			extcmd := exec.Command("tar", "-xvzf", f.Name(), "--strip-components=1", "-C", ppath)
+			extcmd.Dir = tempdir
+			extcmd.Stdout = os.Stdout
+			extcmd.Stderr = os.Stderr
+			extcmd.Run()
+		} else {
+			// TODO wheels
+		}
+
+	}
+
+	return ppath
 
 }
 
