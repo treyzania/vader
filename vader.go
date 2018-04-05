@@ -135,8 +135,8 @@ func build_package(pkg pippackage) {
 	bcmd.Run()
 }
 
-func run_python(vf vaderfiledef, bin bindef) {
-	var prog = exec.Command(bin.Path, vf.Main);
+func run_python(vf vaderfiledef, bin string) {
+	var prog = exec.Command(bin, vf.Main);
 	prog.Stdin = os.Stdin
 	prog.Stdout = os.Stdout
 	prog.Stderr = os.Stderr
@@ -145,16 +145,35 @@ func run_python(vf vaderfiledef, bin bindef) {
 
 func main() {
 
-	var vf = parse_vaderfile("./Vaderfile")
-	var bin bindef
+	args := os.Args[1:]
+	verb := args[0]
 
-	for _, pg := range find_python_bins() {
-		if pg.Genre == vf.Pyver {
-			bin = pg
-			break
+	if verb == "run" {
+
+		var vf = parse_vaderfile("./Vaderfile")
+		run_python(vf, "python" + vf.Pyver)
+
+	} else if verb == "pull" {
+
+		if len(args) != 4 {
+			panic("not enough args")
 		}
-	}
 
-	run_python(vf, bin)
+		pyver := args[1]
+		pkgname := args[2]
+		pkgver := args[3]
+
+		pkg := pippackage{
+			Pipver: pyver,
+			Name: pkgname,
+			Version: pkgver,
+		}
+
+		download_package(pkg)
+		build_package(pkg)
+
+	} else {
+		println("bad")
+	}
 
 }
