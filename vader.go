@@ -11,9 +11,6 @@ import "strings"
 
 import "gopkg.in/yaml.v2"
 
-const pip2path = "/usr/bin/pip"
-const pip3path = "/usr/bin/pip3"
-
 type bindef struct {
 	Path string
 	Genre string
@@ -80,7 +77,7 @@ func (pkg *pippackage) pkg_repo_path() string {
 	if err != nil {
 		panic(err)
 	}
-	return path.Join(user.HomeDir, ".vader", "repo", pkg.Pipver, pkg.Name, pkg.Version)
+	return path.Join(user.HomeDir, ".vader", "repo", "pip" + pkg.Pipver, pkg.Name, pkg.Version)
 }
 
 func download_package(pkg pippackage) string {
@@ -97,7 +94,7 @@ func download_package(pkg pippackage) string {
 	}
 
 	// Actually download it.
-	dlcmd := exec.Command(pkg.Pipver, "download", "--no-deps", dlstr)
+	dlcmd := exec.Command("pip" + pkg.Pipver, "download", "--no-deps", dlstr)
 	dlcmd.Dir = tempdir
 	dlcmd.Stdout = os.Stdout
 	dlcmd.Stderr = os.Stderr
@@ -128,6 +125,14 @@ func download_package(pkg pippackage) string {
 
 	return ppath
 
+}
+
+func build_package(pkg pippackage) {
+	var bcmd = exec.Command("python" + pkg.Pipver, "./setup.py", "build")
+	bcmd.Dir = pkg.pkg_repo_path()
+	bcmd.Stdout = os.Stdout
+	bcmd.Stderr = os.Stderr
+	bcmd.Run()
 }
 
 func run_python(vf vaderfiledef, bin bindef) {
