@@ -12,7 +12,7 @@ import "strings"
 import "gopkg.in/yaml.v2"
 
 type bindef struct {
-	Path string
+	Path  string
 	Genre string
 }
 
@@ -23,9 +23,9 @@ func find_python_bins() []bindef {
 	for _, s := range strings.Split(path, ":") {
 		var programs, _ = ioutil.ReadDir(s)
 		for _, p := range programs {
-			var pn = p.Name();
+			var pn = p.Name()
 			if strings.HasPrefix(pn, "python") && !strings.HasSuffix(pn, "-config") {
-				var e = bindef {}
+				var e = bindef{}
 				e.Path = s + "/" + pn
 				e.Genre = strings.TrimPrefix(pn, "python")
 				pythons = append(pythons, e)
@@ -38,7 +38,7 @@ func find_python_bins() []bindef {
 }
 
 type vaderfiledef struct {
-	Main string `yaml:"main"`
+	Main  string `yaml:"main"`
 	Pyver string `yaml:"pyver"`
 }
 
@@ -67,8 +67,8 @@ func parse_vaderfile(path string) vaderfiledef {
 }
 
 type pippackage struct {
-	Pipver string
-	Name string
+	Pipver  string
+	Name    string
 	Version string
 }
 
@@ -77,7 +77,7 @@ func (pkg *pippackage) pkg_repo_path() string {
 	if err != nil {
 		panic(err)
 	}
-	return path.Join(user.HomeDir, ".vader", "repo", "pip" + pkg.Pipver, pkg.Name, pkg.Version)
+	return path.Join(user.HomeDir, ".vader", "repo", "pip"+pkg.Pipver, pkg.Name, pkg.Version)
 }
 
 func download_package(pkg pippackage) string {
@@ -94,7 +94,7 @@ func download_package(pkg pippackage) string {
 	}
 
 	// Actually download it.
-	dlcmd := exec.Command("pip" + pkg.Pipver, "download", "--no-deps", dlstr)
+	dlcmd := exec.Command("pip"+pkg.Pipver, "download", "--no-deps", dlstr)
 	dlcmd.Dir = tempdir
 	dlcmd.Stdout = os.Stdout
 	dlcmd.Stderr = os.Stderr
@@ -111,15 +111,20 @@ func download_package(pkg pippackage) string {
 	os.MkdirAll(ppath, 0755)
 	for _, f := range files {
 
+		var extcmd *exec.Cmd
 		if strings.HasSuffix(f.Name(), ".tar.gz") {
-			extcmd := exec.Command("tar", "-xvzf", f.Name(), "--strip-components=1", "-C", ppath)
-			extcmd.Dir = tempdir
-			extcmd.Stdout = os.Stdout
-			extcmd.Stderr = os.Stderr
-			extcmd.Run()
+			extcmd = exec.Command("tar", "-xvzf", f.Name(), "--strip-components=1", "-C", ppath)
+		} else if strings.HasSuffix(f.Name(), ".whl") {
+			extcmd = exec.Command("unzip", f.Name(), "-d", ppath)
 		} else {
-			// TODO wheels
+			panic("unsupported package type! (" + f.Name() + ")")
 		}
+
+		// Now actually do it.
+		extcmd.Dir = tempdir
+		extcmd.Stdout = os.Stdout
+		extcmd.Stderr = os.Stderr
+		extcmd.Run()
 
 	}
 
@@ -128,7 +133,7 @@ func download_package(pkg pippackage) string {
 }
 
 func build_package(pkg pippackage) {
-	var bcmd = exec.Command("python" + pkg.Pipver, "./setup.py", "build")
+	var bcmd = exec.Command("python"+pkg.Pipver, "./setup.py", "build")
 	bcmd.Dir = pkg.pkg_repo_path()
 	bcmd.Stdout = os.Stdout
 	bcmd.Stderr = os.Stderr
@@ -136,7 +141,7 @@ func build_package(pkg pippackage) {
 }
 
 func run_python(vf vaderfiledef, bin string) {
-	var prog = exec.Command(bin, vf.Main);
+	var prog = exec.Command(bin, vf.Main)
 	prog.Stdin = os.Stdin
 	prog.Stdout = os.Stdout
 	prog.Stderr = os.Stderr
@@ -151,7 +156,7 @@ func main() {
 	if verb == "run" {
 
 		var vf = parse_vaderfile("./Vaderfile")
-		run_python(vf, "python" + vf.Pyver)
+		run_python(vf, "python"+vf.Pyver)
 
 	} else if verb == "pull" {
 
@@ -164,8 +169,8 @@ func main() {
 		pkgver := args[3]
 
 		pkg := pippackage{
-			Pipver: pyver,
-			Name: pkgname,
+			Pipver:  pyver,
+			Name:    pkgname,
 			Version: pkgver,
 		}
 
