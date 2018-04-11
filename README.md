@@ -55,10 +55,9 @@ without downloading anything.
 and runs the program.  Don't need to specify an entry point if you have a proper
 Vaderfile.
 
-* `vader codegen` :: Runs code generation programs to build transient
-dependencies.
+* `vader codegen` :: Runs code generation programs to build dynamic deps.
 
-* `vader clean` :: Cleans transient dependencies direcory.
+* `vader clean` :: Cleans dynamic dependencies directory.
 
 * `vader package` :: Packages program, all dependencies into a ZIP file, adding
 a bootstrap script to run it when executed.
