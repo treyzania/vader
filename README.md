@@ -45,6 +45,9 @@ which will let you use `vader run` directly without specifying an entry file.
 
 ## Usage
 
+* `vader pull <pyver> <name> <version>` :: Downloads and extracts a specific
+package via PIP and installs it into the local Vader repository.
+
 * `vader download` :: Downloads dependencies so that you can run the program
 without downloading anything.
 
@@ -64,8 +67,10 @@ a bootstrap script to run it when executed.
 
 More important at the top.
 
-- [ ] Python binary execution
-- [ ] PIP dependency identification, downloading (`requirements.txt`)
+- [x] Python binary execution
+- [x] Downloading, extracting PIP dependencies
+- [ ] Automatic dependency management via `requirements.txt`, etc.
 - [ ] Figuring out how to use `Vaderfile`s
 - [ ] Packaging modular/monolithic ZIPs, debs, etc.
+- [ ] "Installing" programs from directory directly. (into `/opt`, etc.)
 - [ ] Dynamic dependencies (code generation a la Swagger, etc.)
