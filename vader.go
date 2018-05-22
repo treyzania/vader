@@ -13,7 +13,7 @@ import "gopkg.in/yaml.v2"
 
 type bindef struct {
 	Path  string
-	Genre string
+	Pyver string
 }
 
 func findPythonBins() []bindef {
@@ -27,7 +27,7 @@ func findPythonBins() []bindef {
 			if strings.HasPrefix(pn, "python") && !strings.Contains(pn, "-") {
 				var e = bindef{}
 				e.Path = s + "/" + pn
-				e.Genre = strings.TrimPrefix(pn, "python")
+				e.Pyver = strings.TrimPrefix(pn, "python")
 				pythons = append(pythons, e)
 			}
 		}
@@ -186,7 +186,7 @@ func main() {
 
 		var pys = findPythonBins()
 		for _, bd := range pys {
-			println("python" + bd.Genre + " " + bd.Path)
+			println("python" + bd.Pyver + " " + bd.Path)
 		}
 
 	} else {
