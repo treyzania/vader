@@ -1,15 +1,17 @@
 package main
 
-import "os"
-import "os/exec"
-import "os/user"
-import "io/ioutil"
-import "path"
-import "path/filepath"
+import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"os/user"
+	"path"
+	"path/filepath"
+	"strings"
 
-import "strings"
-
-import "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
+)
 
 type bindef struct {
 	Path  string
@@ -80,6 +82,33 @@ func (pkg *pippackage) pkgRepoPath() string {
 	return path.Join(user.HomeDir, ".vader", "repo", "pip"+pkg.Pipver, pkg.Name, pkg.Version)
 }
 
+type pkgmeta struct {
+	Type string
+}
+
+func (pkg *pippackage) pkgRepoMetaPath() string {
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	return path.Join(user.HomeDir, ".vader", "repo", "pip"+pkg.Pipver, pkg.Name, pkg.Version+".meta")
+}
+
+func (pkg *pippackage) getMeta() *pkgmeta {
+	raw, _ := ioutil.ReadFile(pkg.pkgRepoMetaPath())
+	var data pkgmeta
+	err := json.Unmarshal(raw, &data)
+	if err != nil {
+		return nil
+	}
+	return &data // shrug?  why are we doing this?
+}
+
+func (pkg *pippackage) setMeta(pm pkgmeta) {
+	raw, _ := json.Marshal(pm)
+	ioutil.WriteFile(pkg.pkgRepoMetaPath(), raw, 0644)
+}
+
 func downloadPackage(pkg pippackage) string {
 
 	tempdir, err := ioutil.TempDir("", "vaderdl")
@@ -106,6 +135,11 @@ func downloadPackage(pkg pippackage) string {
 		panic(err)
 	}
 
+	// Prepare the metadata before we write it.
+	meta := pkgmeta{
+		Type: "unknown",
+	}
+
 	// And extract the files we need.
 	ppath := pkg.pkgRepoPath()
 	os.MkdirAll(ppath, 0755)
@@ -114,8 +148,10 @@ func downloadPackage(pkg pippackage) string {
 		var extcmd *exec.Cmd
 		if strings.HasSuffix(f.Name(), ".tar.gz") {
 			extcmd = exec.Command("tar", "-xvzf", f.Name(), "--strip-components=1", "-C", ppath)
+			meta.Type = "normal"
 		} else if strings.HasSuffix(f.Name(), ".whl") {
 			extcmd = exec.Command("unzip", f.Name(), "-d", ppath)
+			meta.Type = "wheel"
 		} else {
 			panic("unsupported package type! (" + f.Name() + ")")
 		}
@@ -128,6 +164,7 @@ func downloadPackage(pkg pippackage) string {
 
 	}
 
+	pkg.setMeta(meta)
 	return ppath
 
 }
