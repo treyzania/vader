@@ -24,7 +24,7 @@ func find_python_bins() []bindef {
 		var programs, _ = ioutil.ReadDir(s)
 		for _, p := range programs {
 			var pn = p.Name()
-			if strings.HasPrefix(pn, "python") && !strings.HasSuffix(pn, "-config") {
+			if strings.HasPrefix(pn, "python") && !strings.Contains(pn, "-") {
 				var e = bindef{}
 				e.Path = s + "/" + pn
 				e.Genre = strings.TrimPrefix(pn, "python")
@@ -151,6 +151,11 @@ func run_python(vf vaderfiledef, bin string) {
 func main() {
 
 	args := os.Args[1:]
+	if len(args) < 1 {
+		println("not enough arguments")
+		return
+	}
+
 	verb := args[0]
 
 	if verb == "run" {
@@ -176,6 +181,13 @@ func main() {
 
 		download_package(pkg)
 		build_package(pkg)
+
+	} else if verb == "diag-lspy" {
+
+		var pys = find_python_bins()
+		for _, bd := range pys {
+			println("python" + bd.Genre + " " + bd.Path)
+		}
 
 	} else {
 		println("bad")
