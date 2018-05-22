@@ -16,7 +16,7 @@ type bindef struct {
 	Genre string
 }
 
-func find_python_bins() []bindef {
+func findPythonBins() []bindef {
 
 	var path = os.Getenv("PATH")
 	var pythons = make([]bindef, 0)
@@ -42,7 +42,7 @@ type vaderfiledef struct {
 	Pyver string `yaml:"pyver"`
 }
 
-func parse_vaderfile(path string) vaderfiledef {
+func parseVaderfile(path string) vaderfiledef {
 
 	// Mostly stolen from https://stackoverflow.com/questions/28682439/
 
@@ -72,7 +72,7 @@ type pippackage struct {
 	Version string
 }
 
-func (pkg *pippackage) pkg_repo_path() string {
+func (pkg *pippackage) pkgRepoPath() string {
 	user, err := user.Current()
 	if err != nil {
 		panic(err)
@@ -80,7 +80,7 @@ func (pkg *pippackage) pkg_repo_path() string {
 	return path.Join(user.HomeDir, ".vader", "repo", "pip"+pkg.Pipver, pkg.Name, pkg.Version)
 }
 
-func download_package(pkg pippackage) string {
+func downloadPackage(pkg pippackage) string {
 
 	tempdir, err := ioutil.TempDir("", "vaderdl")
 	if err != nil {
@@ -107,7 +107,7 @@ func download_package(pkg pippackage) string {
 	}
 
 	// And extract the files we need.
-	ppath := pkg.pkg_repo_path()
+	ppath := pkg.pkgRepoPath()
 	os.MkdirAll(ppath, 0755)
 	for _, f := range files {
 
@@ -132,15 +132,15 @@ func download_package(pkg pippackage) string {
 
 }
 
-func build_package(pkg pippackage) {
+func buildPackage(pkg pippackage) {
 	var bcmd = exec.Command("python"+pkg.Pipver, "./setup.py", "build")
-	bcmd.Dir = pkg.pkg_repo_path()
+	bcmd.Dir = pkg.pkgRepoPath()
 	bcmd.Stdout = os.Stdout
 	bcmd.Stderr = os.Stderr
 	bcmd.Run()
 }
 
-func run_python(vf vaderfiledef, bin string) {
+func runPython(vf vaderfiledef, bin string) {
 	var prog = exec.Command(bin, vf.Main)
 	prog.Stdin = os.Stdin
 	prog.Stdout = os.Stdout
@@ -160,8 +160,8 @@ func main() {
 
 	if verb == "run" {
 
-		var vf = parse_vaderfile("./Vaderfile")
-		run_python(vf, "python"+vf.Pyver)
+		var vf = parseVaderfile("./Vaderfile")
+		runPython(vf, "python"+vf.Pyver)
 
 	} else if verb == "pull" {
 
@@ -179,12 +179,12 @@ func main() {
 			Version: pkgver,
 		}
 
-		download_package(pkg)
-		build_package(pkg)
+		downloadPackage(pkg)
+		buildPackage(pkg)
 
 	} else if verb == "diag-lspy" {
 
-		var pys = find_python_bins()
+		var pys = findPythonBins()
 		for _, bd := range pys {
 			println("python" + bd.Genre + " " + bd.Path)
 		}
